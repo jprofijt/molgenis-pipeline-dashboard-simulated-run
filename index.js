@@ -157,13 +157,7 @@ const run = {
 }
 
 
-postData("http://localhost:8081/api/v2/status_jobs", jobs).then((response) => {
-  console.log(response)
-  postData("http://localhost:8081/api/v2/status_projects", projects).then((response2) => {
-    console.log(response2)
-    postData("http://localhost:8081/api/v2/status_overview", run).then((response3) => {
-  console.log(response3)
-})})})
+
 
 async function startDemultiplexing() {
   run.entities[0]["demultiplexing"] = "Started"
@@ -216,6 +210,18 @@ async function progressPipelines1() {
     return Promise.reject()
   })
 }
+async function introduceError() {
+  jobs.entities = []
+  projectsArray.forEach((project) => {
+    jobs.entities = [...jobs.entities, ...createJobs(project, ["finished", "Error", "Waiting"])]
+  })
+  return postData("http://localhost:8081/api/v2/status_jobs", jobs, 'PUT').then(() => {
+      return Promise.resolve()
+  }).catch((error) => {
+    console.error(error)
+    return Promise.reject()
+  })
+}
 async function progressPipelines2() {
   jobs.entities = []
   projectsArray.forEach((project) => {
@@ -235,6 +241,15 @@ async function finishPipelines() {
   projectsArray.forEach((project) => {
     jobs.entities = [...jobs.entities, ...createJobs(project, ["finished", "finished", "finished"], true)]
   })
+  return postData("http://localhost:8081/api/v2/status_jobs", jobs, 'PUT').then(() => {
+      return Promise.resolve()
+    }).catch((error) => {
+      console.error(error)
+      return Promise.reject()
+    })
+}
+
+async function startCopyingResults() {
   const projectsResultsStart = {
     entities: [
       {
@@ -271,17 +286,8 @@ async function finishPipelines() {
       }
     ]
   }
-  return postData(`http://localhost:8081/api/v2/status_projects`, projectsResultsStart, 'PUT').then((response) => {
-    postData("http://localhost:8081/api/v2/status_jobs", jobs, 'PUT').then(() => {
-      return Promise.resolve()
-    }).catch((error) => {
-      console.error(error)
-      return Promise.reject()
-    })
-  }).catch((error) => {
-    console.error(error)
-    return Promise.reject()
-  })
+  return postData(`http://localhost:8081/api/v2/status_projects`, projectsResultsStart, 'PUT')
+  
 }
 
 async function finishRun() {
@@ -326,19 +332,58 @@ async function finishRun() {
   }).catch((error) => {
     console.error(error)
     return Promise.reject()
+  }).finally(() => {
+    process.exit(0)
   })
 }
 
 
 
+// Get process.stdin as the standard input object.
+var standard_input = process.stdin;
+
+// Set input character encoding.
+standard_input.setEncoding('utf-8');
+
+// Prompt user to input data in console.
+console.log("introduce Error? (y/n)");
+
+// When user input data and click enter key.
+standard_input.on('data', function (data) {
+  if (data === 'y\n') {
+    console.log("Simulating run with error")
+    postData("http://localhost:8081/api/v2/status_jobs", jobs).then((response) => {
+      postData("http://localhost:8081/api/v2/status_projects", projects).then((response2) => {
+        postData("http://localhost:8081/api/v2/status_overview", run).then((response3) => {
+          setTimeout(startDemultiplexing, 10000)
+          setTimeout(finishDemultiplexing, 20000)
+          setTimeout(startPipelines, 30000)
+          setTimeout(progressPipelines1, 40000)
+          setTimeout(introduceError, 50000)
+          setTimeout(progressPipelines2, 70000)
+          setTimeout(finishPipelines, 80000)
+          setTimeout(startCopyingResults, 90000)
+          setTimeout(finishRun, 100000)
+        })})})
+    
+  } else {
+    console.log("Simulating run without error")
+    postData("http://localhost:8081/api/v2/status_jobs", jobs).then((response) => {
+      postData("http://localhost:8081/api/v2/status_projects", projects).then((response2) => {
+        postData("http://localhost:8081/api/v2/status_overview", run).then((response3) => {
+          setTimeout(startDemultiplexing, 10000)
+          setTimeout(finishDemultiplexing, 20000)
+          setTimeout(startPipelines, 30000)
+          setTimeout(progressPipelines1, 40000)
+          setTimeout(progressPipelines2, 50000)
+          setTimeout(finishPipelines, 60000)
+          setTimeout(startCopyingResults, 70000)
+          setTimeout(finishRun, 80000)
+        })})})
+  }
+
+})
 
 
 
-setTimeout(startDemultiplexing, 10000)
-setTimeout(finishDemultiplexing, 20000)
-setTimeout(startPipelines, 30000)
-setTimeout(progressPipelines1, 40000)
-setTimeout(progressPipelines2, 50000)
-setTimeout(finishPipelines, 60000)
-setTimeout(finishRun, 70000)
 
