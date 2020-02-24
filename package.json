@@ -1,0 +1,25 @@
+{
+  "name": "molgenis-pipeline-dashboard-simulated",
+  "version": "1.0.0",
+  "description": "simulated pipeline run in the mogenis-pipeline-dashboard",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "molgenis-pipeline-dashboard-simulated"
+  },
+  "keywords": [
+    "molgenis",
+    "pipeline",
+    "dashboard"
+  ],
+  "author": "jprofijt",
+  "license": "LGPL-3.0",
+  "dependencies": {
+    "@molgenis/molgenis-api-client": "^3.1.3",
+    "base-64": "^0.1.0",
+    "node-fetch": "^2.6.0"
+  }
+}
