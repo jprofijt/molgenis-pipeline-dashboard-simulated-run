@@ -106,7 +106,6 @@ let jobs = {
 projectsArray.forEach((project) => {
   jobs.entities = [...jobs.entities, ...createJobs(project)]
 })
-console.log(jobs.entities)
 
 const projects = {
   entities: [
@@ -162,7 +161,6 @@ const run = {
 async function startDemultiplexing() {
   run.entities[0]["demultiplexing"] = "Started"
   return postData(`http://localhost:8081/api/v2/status_overview`, run, 'PUT').then((response) => {
-    console.log(response)
     return Promise.resolve()
   }).catch((error) => {
     console.error(error)
@@ -172,7 +170,6 @@ async function finishDemultiplexing() {
   run.entities[0]["demultiplexing"] = "Finished"
   run.entities[0]["copy_raw_prm"] = "Started"
   return postData(`http://localhost:8081/api/v2/status_overview`, run, 'PUT').then((response) => {
-    console.log(response)
     return Promise.resolve()
   }).catch((error) => {
     console.error(error)
@@ -339,18 +336,10 @@ async function finishRun() {
 
 
 
-// Get process.stdin as the standard input object.
-var standard_input = process.stdin;
-
-// Set input character encoding.
-standard_input.setEncoding('utf-8');
-
-// Prompt user to input data in console.
-console.log("introduce Error? (y/n)");
 
 // When user input data and click enter key.
-standard_input.on('data', function (data) {
-  if (data === 'y\n') {
+function startRun(data) {
+  if (data === 'error') {
     console.log("Simulating run with error")
     postData("http://localhost:8081/api/v2/status_jobs", jobs).then((response) => {
       postData("http://localhost:8081/api/v2/status_projects", projects).then((response2) => {
@@ -381,9 +370,15 @@ standard_input.on('data', function (data) {
           setTimeout(finishRun, 80000)
         })})})
   }
-
-})
-
+}
+const keyword = process.argv[2]
+if (keyword === "delay") {
+  setTimeout(function() {
+    startRun(keyword)
+  }, 12000)
+} else {
+  startRun(keyword)
+}
 
 
 
